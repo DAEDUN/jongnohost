@@ -6,14 +6,12 @@
 <title>Jongno Host</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
 </style>
 <link rel="stylesheet" href="https://use.typekit.net/wfq8ryj.css">
 <style>
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* 저장/드래그 방지 */
 img {
   -webkit-user-drag: none;
   user-select: none;
@@ -28,7 +26,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Hero */
 .hero {
   height: 100vh;
   display: flex;
@@ -66,7 +63,6 @@ body {
   50% { opacity: 1; }
 }
 
-/* Chapter */
 .chapter-divider {
   padding: 100px 20px;
   text-align: center;
@@ -95,31 +91,70 @@ body {
   margin-top: 8px;
 }
 
-/* Gallery */
 .gallery {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px 80px;
 }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1 class="title-ko">종로 호스트</h1>
+  <div class="title-en">Jongno host</div>
+  <div class="scroll-hint">scroll</div>
+</div>
+
+<nav class="nav" id="nav"></nav>
+<div id="gallery"></div>
+
+<div class="overlay" id="modal" onclick="closeModal()">
+  <button class="close-btn" onclick="closeModal()">✕</button>
+  <div class="wrap" onclick="event.stopPropagation()">
+    <img id="mImg" src="" alt="">
+    <div class="info">
+      <div class="ch" id="mCh"></div>
+      <div class="ch-en" id="mChEn"></div>
+      <div class="title" id="mTitle"></div>
+      <div class="date" id="mDate"></div>
+      <div class="time" id="mTime"></div>
+      <div class="loc" id="mLoc"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 이미지 고정 크기 */
 .photo-item {
   margin-bottom: 48px;
   cursor: pointer;
   transition: opacity 0.3s;
+  width: 100%;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .photo-item:hover { opacity: 0.92; }
 .photo-item img {
   width: 100%;
-  max-width: 680px;
+  height: auto;
+  aspect-ratio: 1217 / 1748;
+  object-fit: cover;
   display: block;
-  margin: 0 auto;
+  background: #f5f5f5;
 }
-.photo-item .pg {
-  text-align: center;
-  font-family: 'adobe-caslon-pro', serif;
-  font-size: 0.7rem;
+
+/* 챕터 섹션 */
+.chapter-section {
+  min-height: 100px;
+}
+.chapter-section.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #ccc;
-  margin-top: 8px;
-  letter-spacing: 0.1em;
+  font-size: 0.8rem;
 }
 
 /* Modal */
@@ -201,13 +236,6 @@ body {
   font-style: italic;
   color: #666;
 }
-.info .p {
-  font-family: 'adobe-caslon-pro', serif;
-  font-size: 0.7rem;
-  color: #ccc;
-  margin-top: 20px;
-  letter-spacing: 0.1em;
-}
 .close-btn {
   position: fixed;
   top: 20px; right: 24px;
@@ -255,82 +283,108 @@ body {
   .photo-item { margin-bottom: 32px; }
 }
 </style>
-</head>
-<body>
-
-<div class="hero">
-  <h1 class="title-ko">종로 호스트</h1>
-  <div class="title-en">Jongno host</div>
-  <div class="scroll-hint">scroll</div>
-</div>
-
-<nav class="nav" id="nav"></nav>
-<div id="gallery"></div>
-
-<div class="overlay" id="modal" onclick="closeModal()">
-  <button class="close-btn" onclick="closeModal()">✕</button>
-  <div class="wrap" onclick="event.stopPropagation()">
-    <img id="mImg" src="" alt="">
-    <div class="info">
-      <div class="ch" id="mCh"></div>
-      <div class="ch-en" id="mChEn"></div>
-      <div class="title" id="mTitle"></div>
-      <div class="date" id="mDate"></div>
-      <div class="time" id="mTime"></div>
-      <div class="loc" id="mLoc"></div>
-      <div class="p" id="mP"></div>
-    </div>
-  </div>
-</div>
 
 <script>
 let data = [];
+let chapters = []; // { ko, en, items: [...], el: DOM, rendered: false }
 
 async function init() {
   const r = await fetch('gallery_data.json');
   data = await r.json();
-  build();
+  buildChapters();
   navSetup();
   scrollWatch();
+  observeChapters();
 }
 
-function build() {
+function buildChapters() {
   const g = document.getElementById('gallery');
-  let last = '';
-  let ci = 0;
+  let last = '', ci = 0;
 
   data.forEach((ph, i) => {
     if (ph.chapter_ko && ph.chapter_ko !== last) {
       ci++;
-      const d = document.createElement('div');
-      d.className = 'chapter-divider';
-      d.id = 'ch-' + ci;
-      d.dataset.ch = ph.chapter_ko;
-      d.innerHTML = `<div class="num">${String(ci).padStart(2,'0')}</div><h2>${ph.chapter_ko}</h2><div class="en">${ph.chapter_en}</div>`;
-      g.appendChild(d);
+      chapters.push({
+        ko: ph.chapter_ko,
+        en: ph.chapter_en,
+        idx: ci,
+        items: [],
+        el: null,
+        rendered: false
+      });
       last = ph.chapter_ko;
     }
+    if (chapters.length > 0) {
+      chapters[chapters.length - 1].items.push({ ...ph, globalIdx: i });
+    }
+  });
+
+  // 챕터별 섹션 생성 (이미지는 아직 안 넣음)
+  chapters.forEach(ch => {
+    // 챕터 구분선
+    const divider = document.createElement('div');
+    divider.className = 'chapter-divider';
+    divider.id = 'ch-' + ch.idx;
+    divider.dataset.ch = ch.ko;
+    divider.innerHTML = `<div class="num">${String(ch.idx).padStart(2,'0')}</div><h2>${ch.ko}</h2><div class="en">${ch.en}</div>`;
+    g.appendChild(divider);
+
+    // 챕터 사진 섹션 (placeholder)
+    const section = document.createElement('div');
+    section.className = 'chapter-section gallery';
+    // 예상 높이 설정 (이미지 고정 크기 기반)
+    const estimatedHeight = ch.items.length * (680 * 1748 / 1217 + 48);
+    section.style.minHeight = estimatedHeight + 'px';
+    section.dataset.chIdx = ch.idx;
+    g.appendChild(section);
+    ch.el = section;
+  });
+}
+
+function renderChapter(ch) {
+  if (ch.rendered) return;
+  ch.rendered = true;
+  ch.el.style.minHeight = '';
+  ch.el.innerHTML = '';
+
+  ch.items.forEach(ph => {
     const el = document.createElement('div');
     el.className = 'photo-item';
-    el.onclick = () => openModal(i);
+    el.onclick = () => openModal(ph.globalIdx);
     el.innerHTML = `<img src="${ph.file}" alt="p.${ph.page}" loading="lazy">`;
-    g.appendChild(el);
+    ch.el.appendChild(el);
   });
+}
+
+function observeChapters() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = parseInt(e.target.dataset.chIdx);
+        const ch = chapters.find(c => c.idx === idx);
+        if (ch) renderChapter(ch);
+      }
+    });
+  }, { rootMargin: '200px 0px' });
+
+  chapters.forEach(ch => obs.observe(ch.el));
 }
 
 function navSetup() {
   const nav = document.getElementById('nav');
-  let last = '', ci = 0;
-  data.forEach(ph => {
-    if (ph.chapter_ko && ph.chapter_ko !== last) {
-      ci++;
-      const a = document.createElement('a');
-      a.href = '#ch-' + ci;
-      a.textContent = ph.chapter_ko;
-      a.dataset.ch = ph.chapter_ko;
-      nav.appendChild(a);
-      last = ph.chapter_ko;
-    }
+  chapters.forEach(ch => {
+    const a = document.createElement('a');
+    a.href = '#ch-' + ch.idx;
+    a.textContent = ch.ko;
+    a.dataset.ch = ch.ko;
+    // instant scroll
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      // 먼저 렌더링
+      renderChapter(ch);
+      document.getElementById('ch-' + ch.idx).scrollIntoView({ behavior: 'instant' });
+    });
+    nav.appendChild(a);
   });
 }
 
@@ -375,7 +429,7 @@ init();
 // 우클릭 방지
 document.addEventListener('contextmenu', e => e.preventDefault());
 
-// 키보드 단축키 방지 (Ctrl+S, Ctrl+U, Ctrl+Shift+I, PrintScreen)
+// 키보드 단축키 방지
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && (e.key === 's' || e.key === 'u' || e.key === 'p')) e.preventDefault();
   if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) e.preventDefault();
@@ -387,7 +441,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// 캡처 감지 (visibility change)
+// 캡처 감지
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     document.body.style.filter = 'blur(30px)';
