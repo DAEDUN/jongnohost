@@ -377,12 +377,15 @@ function navSetup() {
     a.href = '#ch-' + ch.idx;
     a.textContent = ch.ko;
     a.dataset.ch = ch.ko;
-    // instant scroll
+    // instant scroll - 중간 챕터 모두 렌더링 후 점프
     a.addEventListener('click', e => {
       e.preventDefault();
-      // 먼저 렌더링
-      renderChapter(ch);
-      document.getElementById('ch-' + ch.idx).scrollIntoView({ behavior: 'instant' });
+      chapters.forEach(c => {
+        if (c.idx <= ch.idx) renderChapter(c);
+      });
+      requestAnimationFrame(() => {
+        document.getElementById('ch-' + ch.idx).scrollIntoView({ behavior: 'instant' });
+      });
     });
     nav.appendChild(a);
   });
