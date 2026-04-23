@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jongno Host</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+</style>
+<link rel="stylesheet" href="https://use.typekit.net/wfq8ryj.css">
+<style>
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 저장/드래그 방지 */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  background: #fff;
+  color: #222;
+  font-family: 'adobe-caslon-pro', 'Noto Serif KR', serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hero */
+.hero {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.hero .title-ko {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 200;
+  color: #222;
+  letter-spacing: 0.08em;
+}
+.hero .title-en {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 400;
+  font-style: italic;
+  color: #333;
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+}
+.hero .scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  font-size: 0.75rem;
+  color: #bbb;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Chapter */
+.chapter-divider {
+  padding: 100px 20px;
+  text-align: center;
+}
+.chapter-divider .num {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.75rem;
+  color: #bbb;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.chapter-divider h2 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  font-weight: 300;
+  color: #333;
+  line-height: 1.7;
+}
+.chapter-divider .en {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  font-weight: 300;
+  font-style: italic;
+  color: #999;
+  margin-top: 8px;
+}
+
+/* Gallery */
+.gallery {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+.photo-item {
+  margin-bottom: 48px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+.photo-item:hover { opacity: 0.92; }
+.photo-item img {
+  width: 100%;
+  max-width: 680px;
+  display: block;
+  margin: 0 auto;
+}
+.photo-item .pg {
+  text-align: center;
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  color: #ccc;
+  margin-top: 8px;
+  letter-spacing: 0.1em;
+}
+
+/* Modal */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.96);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  cursor: pointer;
+}
+.overlay.open { display: flex; }
+.overlay .wrap {
+  display: flex;
+  gap: 40px;
+  max-width: 1100px;
+  max-height: 90vh;
+  align-items: center;
+  cursor: default;
+}
+.overlay .wrap img {
+  max-height: 82vh;
+  max-width: 55vw;
+  object-fit: contain;
+}
+.info { min-width: 180px; max-width: 400px; }
+.info .ch {
+  white-space: pre-line;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: #999;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.info .ch-en {
+  white-space: pre-line;
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #bbb;
+  margin-top: 4px;
+}
+.info .title {
+  white-space: pre-line;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.info .date {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 1rem;
+  font-weight: 400;
+  font-style: italic;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: pre-line;
+}
+.info .time {
+  white-space: pre-line;
+  font-family: 'adobe-caslon-pro', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: #888;
+  margin-bottom: 14px;
+}
+.info .loc {
+  white-space: pre-line;
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  font-style: italic;
+  color: #666;
+}
+.info .p {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  color: #ccc;
+  margin-top: 20px;
+  letter-spacing: 0.1em;
+}
+.close-btn {
+  position: fixed;
+  top: 20px; right: 24px;
+  font-size: 1.4rem;
+  color: #999;
+  cursor: pointer;
+  z-index: 1001;
+  background: none;
+  border: none;
+  font-family: 'adobe-caslon-pro', serif;
+}
+.close-btn:hover { color: #333; }
+
+/* Nav */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  padding: 10px 16px;
+  display: flex;
+  gap: 14px;
+  border-bottom: 1px solid #eee;
+  transform: translateY(-100%);
+  transition: transform 0.3s;
+  overflow-x: auto;
+}
+.nav.show { transform: translateY(0); }
+.nav a {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.65rem;
+  font-weight: 300;
+  color: #888;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav a:hover { color: #333; }
+.nav a.on { color: #111; font-weight: 400; }
+
+@media (max-width: 768px) {
+  .overlay .wrap { flex-direction: column; gap: 20px; }
+  .overlay .wrap img { max-width: 90vw; max-height: 50vh; }
+  .info { text-align: center; }
+  .photo-item { margin-bottom: 32px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1 class="title-ko">종로 호스트</h1>
+  <div class="title-en">Jongno host</div>
+  <div class="scroll-hint">scroll</div>
+</div>
+
+<nav class="nav" id="nav"></nav>
+<div id="gallery"></div>
+
+<div class="overlay" id="modal" onclick="closeModal()">
+  <button class="close-btn" onclick="closeModal()">✕</button>
+  <div class="wrap" onclick="event.stopPropagation()">
+    <img id="mImg" src="" alt="">
+    <div class="info">
+      <div class="ch" id="mCh"></div>
+      <div class="ch-en" id="mChEn"></div>
+      <div class="title" id="mTitle"></div>
+      <div class="date" id="mDate"></div>
+      <div class="time" id="mTime"></div>
+      <div class="loc" id="mLoc"></div>
+      <div class="p" id="mP"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let data = [];
+
+async function init() {
+  const r = await fetch('gallery_data.json');
+  data = await r.json();
+  build();
+  navSetup();
+  scrollWatch();
+}
+
+function build() {
+  const g = document.getElementById('gallery');
+  let last = '';
+  let ci = 0;
+
+  data.forEach((ph, i) => {
+    if (ph.chapter_ko && ph.chapter_ko !== last) {
+      ci++;
+      const d = document.createElement('div');
+      d.className = 'chapter-divider';
+      d.id = 'ch-' + ci;
+      d.dataset.ch = ph.chapter_ko;
+      d.innerHTML = `<div class="num">${String(ci).padStart(2,'0')}</div><h2>${ph.chapter_ko}</h2><div class="en">${ph.chapter_en}</div>`;
+      g.appendChild(d);
+      last = ph.chapter_ko;
+    }
+    const el = document.createElement('div');
+    el.className = 'photo-item';
+    el.onclick = () => openModal(i);
+    el.innerHTML = `<img src="${ph.file}" alt="p.${ph.page}" loading="lazy">`;
+    g.appendChild(el);
+  });
+}
+
+function navSetup() {
+  const nav = document.getElementById('nav');
+  let last = '', ci = 0;
+  data.forEach(ph => {
+    if (ph.chapter_ko && ph.chapter_ko !== last) {
+      ci++;
+      const a = document.createElement('a');
+      a.href = '#ch-' + ci;
+      a.textContent = ph.chapter_ko;
+      a.dataset.ch = ph.chapter_ko;
+      nav.appendChild(a);
+      last = ph.chapter_ko;
+    }
+  });
+}
+
+function scrollWatch() {
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('show', window.scrollY > window.innerHeight * 0.8);
+  });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.nav a').forEach(a =>
+          a.classList.toggle('on', a.dataset.ch === e.target.dataset.ch));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('.chapter-divider').forEach(d => obs.observe(d));
+}
+
+function openModal(i) {
+  const ph = data[i];
+  document.getElementById('mImg').src = ph.file;
+  document.getElementById('mCh').textContent = ph.chapter_ko;
+  document.getElementById('mChEn').textContent = ph.chapter_en;
+  document.getElementById('mTitle').textContent = ph.title || '';
+  document.getElementById('mDate').textContent = ph.date || '';
+  document.getElementById('mTime').textContent = ph.time || '';
+  document.getElementById('mLoc').textContent = ph.location || '';
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+init();
+
+// 우클릭 방지
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// 키보드 단축키 방지 (Ctrl+S, Ctrl+U, Ctrl+Shift+I, PrintScreen)
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && (e.key === 's' || e.key === 'u' || e.key === 'p')) e.preventDefault();
+  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) e.preventDefault();
+  if (e.key === 'F12') e.preventDefault();
+  if (e.key === 'PrintScreen') {
+    navigator.clipboard.writeText('');
+    document.body.style.filter = 'blur(30px)';
+    setTimeout(() => document.body.style.filter = '', 1500);
+  }
+});
+
+// 캡처 감지 (visibility change)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    document.body.style.filter = 'blur(30px)';
+  } else {
+    document.body.style.filter = '';
+  }
+});
+</script>
+</body>
+</html>
