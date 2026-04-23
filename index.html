@@ -103,10 +103,17 @@ body {
 <div class="hero">
   <h1 class="title-ko">종로 호스트</h1>
   <div class="title-en">Jongno host</div>
-  <div class="scroll-hint">scroll</div>
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSc_NVT0sZHj2c7k8dpILLgVIKXERRh_2Hgv3CIUWzAg7UpScw/viewform?usp=publish-editor" target="_blank" class="scroll-hint" style="text-decoration:none;color:#bbb;">구매하기</a>
 </div>
 
 <nav class="nav" id="nav"></nav>
+
+<div class="gallery" style="padding-top: 40px; padding-bottom: 40px;">
+  <div class="photo-item"><img src="split_pages/page_0005.jpg" alt="목차"></div>
+  <div class="photo-item"><img src="split_pages/page_0006.jpg" alt="목차"></div>
+  <div class="photo-item"><img src="split_pages/page_0007.jpg" alt="목차"></div>
+</div>
+
 <div id="gallery"></div>
 
 <div class="overlay" id="modal" onclick="closeModal()">
@@ -143,6 +150,34 @@ body {
   object-fit: cover;
   display: block;
   background: #f5f5f5;
+}
+
+.photo-meta {
+  margin-top: 10px;
+  padding: 0 4px;
+  white-space: pre-line;
+}
+.meta-date {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #999;
+  line-height: 1.4;
+}
+.meta-time {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #999;
+  line-height: 1.4;
+}
+.meta-loc {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #999;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 /* 챕터 섹션 */
@@ -187,7 +222,7 @@ body {
 .info .ch {
   white-space: pre-line;
   font-family: 'Noto Serif KR', serif;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 300;
   color: #999;
   line-height: 1.5;
@@ -204,37 +239,38 @@ body {
 .info .title {
   white-space: pre-line;
   font-family: 'Noto Serif KR', serif;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 300;
-  color: #444;
+  color: #666;
   line-height: 1.6;
   margin-bottom: 16px;
 }
 .info .date {
   font-family: 'adobe-caslon-pro', serif;
-  font-size: 1rem;
+  font-size: 0.65rem;
   font-weight: 400;
   font-style: italic;
-  color: #333;
-  margin-bottom: 4px;
+  color: #666;
+  margin-bottom: 3px;
   white-space: pre-line;
 }
 .info .time {
   white-space: pre-line;
   font-family: 'adobe-caslon-pro', serif;
   font-style: italic;
-  font-size: 0.95rem;
+  font-size: 0.65rem;
   font-weight: 300;
-  color: #888;
-  margin-bottom: 14px;
+  color: #666;
+  margin-bottom: 3px;
 }
 .info .loc {
   white-space: pre-line;
   font-family: 'adobe-caslon-pro', serif;
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   font-weight: 300;
   font-style: italic;
   color: #666;
+  margin-bottom: 0;
 }
 .close-btn {
   position: fixed;
@@ -275,23 +311,51 @@ body {
 }
 .nav a:hover { color: #333; }
 .nav a.on { color: #111; font-weight: 400; }
+.nav a.preview { color: #333; font-weight: 400; }
+
+/* 잠긴 챕터 */
+.locked-chapter {
+  text-align: center;
+  padding: 80px 20px;
+  color: #bbb;
+}
+.lock-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+.lock-text {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+.lock-sub {
+  font-family: 'adobe-caslon-pro', serif;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #ccc;
+}
 
 @media (max-width: 768px) {
-  .overlay .wrap { flex-direction: column; gap: 20px; }
-  .overlay .wrap img { max-width: 90vw; max-height: 50vh; }
-  .info { text-align: center; }
+  .overlay .wrap { flex-direction: column !important; gap: 2px; align-items: stretch; padding: 0 20px; }
+  .overlay .wrap img { max-width: 90vw; max-height: 55vh; align-self: center; }
+  .info { max-width: 90vw; }
+  .info.align-right { text-align: right; }
   .photo-item { margin-bottom: 32px; }
 }
 </style>
 
 <script>
 let data = [];
-let chapters = []; // { ko, en, items: [...], el: DOM, rendered: false }
+let chapters = [];
+let previewChapters = new Set(); // 공개 챕터 인덱스
+const PREVIEW_COUNT = 6;
 
 async function init() {
   const r = await fetch('gallery_data.json');
   data = await r.json();
   buildChapters();
+  pickPreviewChapters();
   navSetup();
   scrollWatch();
   observeChapters();
@@ -326,7 +390,7 @@ function buildChapters() {
     divider.className = 'chapter-divider';
     divider.id = 'ch-' + ch.idx;
     divider.dataset.ch = ch.ko;
-    divider.innerHTML = `<div class="num">${String(ch.idx).padStart(2,'0')}</div><h2>${ch.ko}</h2><div class="en">${ch.en}</div>`;
+    divider.innerHTML = `<h2>${ch.ko}</h2><div class="en">${ch.en}</div>`;
     g.appendChild(divider);
 
     // 챕터 사진 섹션 (placeholder)
@@ -341,11 +405,37 @@ function buildChapters() {
   });
 }
 
+function pickPreviewChapters() {
+  // 첫 번째 챕터는 항상 포함
+  previewChapters.add(0);
+  
+  // 나머지 29개를 5등분해서 각 구간에서 1개씩 랜덤 선택 (쏠림 방지)
+  const remaining = chapters.length - 1;
+  const groupSize = Math.floor(remaining / (PREVIEW_COUNT - 1));
+  
+  for (let g = 0; g < PREVIEW_COUNT - 1; g++) {
+    const start = 1 + g * groupSize;
+    const end = (g === PREVIEW_COUNT - 2) ? chapters.length : 1 + (g + 1) * groupSize;
+    const pick = start + Math.floor(Math.random() * (end - start));
+    previewChapters.add(pick);
+  }
+}
+
 function renderChapter(ch) {
   if (ch.rendered) return;
   ch.rendered = true;
   ch.el.style.minHeight = '';
   ch.el.innerHTML = '';
+
+  const chArrayIdx = chapters.indexOf(ch);
+  if (!previewChapters.has(chArrayIdx)) {
+    // 잠긴 챕터
+    const lock = document.createElement('div');
+    lock.className = 'locked-chapter';
+    lock.innerHTML = ``;
+    ch.el.appendChild(lock);
+    return;
+  }
 
   ch.items.forEach(ph => {
     const el = document.createElement('div');
@@ -377,6 +467,10 @@ function navSetup() {
     a.href = '#ch-' + ch.idx;
     a.textContent = ch.ko;
     a.dataset.ch = ch.ko;
+    const chArrayIdx = chapters.indexOf(ch);
+    if (previewChapters.has(chArrayIdx)) {
+      a.classList.add('preview');
+    }
     // instant scroll - 중간 챕터 모두 렌더링 후 점프
     a.addEventListener('click', e => {
       e.preventDefault();
@@ -410,12 +504,22 @@ function scrollWatch() {
 function openModal(i) {
   const ph = data[i];
   document.getElementById('mImg').src = ph.file;
-  document.getElementById('mCh').textContent = ph.chapter_ko;
-  document.getElementById('mChEn').textContent = ph.chapter_en;
+  document.getElementById('mCh').textContent = '';
+  document.getElementById('mChEn').textContent = '';
   document.getElementById('mTitle').textContent = ph.title || '';
   document.getElementById('mDate').textContent = ph.date || '';
   document.getElementById('mTime').textContent = ph.time || '';
   document.getElementById('mLoc').textContent = ph.location || '';
+  // 홀수 페이지 → 인덱스 왼쪽, 짝수 → 오른쪽
+  const wrap = document.querySelector('.overlay .wrap');
+  const info = document.querySelector('.overlay .info');
+  if (ph.page % 2 === 1) {
+    wrap.style.flexDirection = 'row-reverse';
+    info.classList.remove('align-right');
+  } else {
+    wrap.style.flexDirection = 'row';
+    info.classList.add('align-right');
+  }
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
