@@ -406,6 +406,13 @@ function buildChapters() {
 }
 
 function pickPreviewChapters() {
+  // URL에 key=bookstore 있으면 전체 공개
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('key') === 'bookstore') {
+    chapters.forEach((_, i) => previewChapters.add(i));
+    return;
+  }
+
   // 첫 번째 챕터는 항상 포함
   previewChapters.add(0);
   
